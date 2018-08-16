@@ -32,6 +32,7 @@ public class ServerMain {
     private static final int CHAR_BUF_SIZE = 256;
     private final Socket clientSocket;
     private final OutboundSocketMessageDispatcher socketMessageDispatcher;
+    private String username;
     
     private ClientHandlerThread(
       Socket clientSocket,
@@ -40,6 +41,7 @@ public class ServerMain {
       Objects.requireNonNull(socketMessageDispatcher);
       this.clientSocket = clientSocket;
       this.socketMessageDispatcher = socketMessageDispatcher;
+      this.username = this.clientSocket.getInetAddress().toString();
     }
     
     @Override public void run() {
@@ -50,17 +52,18 @@ public class ServerMain {
       ) {
         while (true) {
           try {
-            if (inputBufferReader.ready()) {
-              String line = inputBufferReader.readLine();
-              if (line != null) {
-                System.out.println(line);
-                if (line.startsWith("BYE")) {
-                  break;
-                }
-                else if (line.startsWith("SEND")) {
-                  String message = line.substring(4);
-                  socketMessageDispatcher.dispatchMessage(message);
-                }
+            String line = inputBufferReader.readLine();
+            if (line != null) {
+              System.out.println(line);
+              if (line.startsWith("BYE")) {
+                break;
+              }
+              else if (line.startsWith("NICK")) {
+                username = line.substring(5);
+              }
+              else if (line.startsWith("SEND")) {
+                String message = line.substring(4);
+                socketMessageDispatcher.dispatchMessage(username, message);
               }
             }
           }
