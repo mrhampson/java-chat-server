@@ -1,10 +1,11 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
@@ -31,7 +32,7 @@ public class ServerMain {
     private static final int CHAR_BUF_SIZE = 256;
     private final Socket clientSocket;
     
-    ClientHandlerThread(Socket clientSocket) {
+    private ClientHandlerThread(Socket clientSocket) {
       Objects.requireNonNull(clientSocket);
       this.clientSocket = clientSocket;
     }
@@ -39,17 +40,18 @@ public class ServerMain {
     @Override public void run() {
       System.out.println("New client thread started: (thread id: " + Thread.currentThread().getId() + ")");
       try (
-        InputStreamReader inputStreamReader = new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.US_ASCII);
-        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.US_ASCII)
+        BufferedReader inputBufferReader = new BufferedReader(
+          new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.US_ASCII), CHAR_BUF_SIZE);
+        BufferedWriter outputBufferWriter = new BufferedWriter(
+          new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.US_ASCII), CHAR_BUF_SIZE)
       ) {
-        final CharBuffer charBuffer = CharBuffer.allocate(CHAR_BUF_SIZE);
         while (true) {
-          if (inputStreamReader.ready()) {
-            int readCharCount = inputStreamReader.read(charBuffer);
-            if (readCharCount != -1) {
-              outputStreamWriter.write(charBuffer.array(), 0, readCharCount);
-              printBuffer(charBuffer.array(), readCharCount);
-              if (doesFirstWordMatch("BYE", charBuffer.array())) {
+          // Handle input
+          if (inputBufferReader.ready()) {
+            String line = inputBufferReader.readLine();
+            if (line != null) {
+              System.out.println(line);
+              if (line.startsWith("BYE")) {
                 break;
               }
             }
@@ -58,27 +60,8 @@ public class ServerMain {
         clientSocket.close();
       }
       catch (IOException e) {
-        System.out.println(e);
+        System.out.println(e.toString());
       }
-    }
-  }
-  
-  private static boolean doesFirstWordMatch(String toMatch, char[] chars) {
-    Objects.requireNonNull(toMatch);
-    for (int i = 0; i < toMatch.length(); i++) {
-      if (i > chars.length - 1) {
-        return false;
-      }
-      if (chars[i] != toMatch.charAt(i)) {
-        return false;
-      }
-    }
-    return true;
-  }
-  
-  private static void printBuffer(char[] buffer, int length) {
-    for (int i = 0; i < length; i++) {
-      System.out.print(buffer[i]);
     }
   }
 }
