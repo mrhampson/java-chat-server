@@ -55,15 +55,15 @@ public class ServerMain {
             String line = inputBufferReader.readLine();
             if (line != null) {
               System.out.println(line);
-              if (line.startsWith("BYE")) {
-                break;
+              if (line.startsWith("s ") || line.startsWith("SEND ")) {
+                String message = line.substring(5);
+                socketMessageDispatcher.dispatchMessage(username, message);
               }
-              else if (line.startsWith("NICK")) {
+              else if (line.startsWith("NICK ")) {
                 username = line.substring(5);
               }
-              else if (line.startsWith("SEND")) {
-                String message = line.substring(4);
-                socketMessageDispatcher.dispatchMessage(username, message);
+              else if (line.startsWith("BYE")) {
+                break;
               }
             }
           }
