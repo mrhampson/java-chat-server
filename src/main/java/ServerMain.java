@@ -56,11 +56,11 @@ public class ServerMain {
             if (line != null) {
               System.out.println(line);
               if (line.startsWith("s ") || line.startsWith("SEND ")) {
-                String message = line.substring(5);
+                String message = line.substring(line.indexOf(' ') + 1);
                 socketMessageDispatcher.dispatchMessage(username, message);
               }
               else if (line.startsWith("NICK ")) {
-                username = line.substring(5);
+                username = line.substring(line.indexOf(' ') + 1);
               }
               else if (line.startsWith("BYE")) {
                 break;
