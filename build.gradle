@@ -17,5 +17,5 @@ dependencies {
 
 task runServer(type: JavaExec) {
     classpath sourceSets.main.runtimeClasspath
-    main = "ServerMain"
+    main = "com.mrhampson.javachat.ServerMain"
 }
