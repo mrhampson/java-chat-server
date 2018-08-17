@@ -18,6 +18,8 @@ import com.mrhampson.javachat.UsernameManager;
 
 import java.net.InetAddress;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * @author Marshall Hampson
@@ -45,7 +47,7 @@ public class DirectMessageCommandProcessor implements CommandProcessor {
     }
   }
 
-  @Override public String getKeyword() {
-    return "DM";
+  @Override public Set<String> getKeywords() {
+    return Collections.singleton("DM");
   }
 }

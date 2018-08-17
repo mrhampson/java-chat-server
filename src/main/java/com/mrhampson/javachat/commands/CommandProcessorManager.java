@@ -16,8 +16,10 @@ package com.mrhampson.javachat.commands;
 import com.mrhampson.javachat.OutboundSocketMessageDispatcher;
 import com.mrhampson.javachat.UsernameManager;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -49,9 +51,15 @@ public class CommandProcessorManager {
       outboundSocketMessageDispatcher,
       usernameManager
     );
-    
+    List<CommandProcessor> allProcessorsList = Arrays.asList(
+      directMessageCommandProcessor
+    );
     Map<String, CommandProcessor> allProcessorMutable = new HashMap<>();
-    allProcessorMutable.put(directMessageCommandProcessor.getKeyword(), directMessageCommandProcessor);
+    for (CommandProcessor processor : allProcessorsList) {
+      for (String keyword : processor.getKeywords()) {
+        allProcessorMutable.put(keyword, processor);
+      }
+    }
     allProcessors = Collections.unmodifiableMap(allProcessorMutable);
   }
   

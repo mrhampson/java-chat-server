@@ -13,10 +13,12 @@
  */
 package com.mrhampson.javachat.commands;
 
+import java.util.Set;
+
 /**
  * @author Marshall Hampson
  */
 public interface CommandProcessor {
   void processLine(String usernameContext, String line);
-  String getKeyword();
+  Set<String> getKeywords();
 }
