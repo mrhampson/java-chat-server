@@ -1,4 +1,4 @@
-# java-chat-server
+# javachat
 Simple text chat server over TCP implemented in Java.
 
 # Current commands supported
