@@ -21,7 +21,7 @@ Aug 17, 2018 1:53:19 AM (mrhampson): Hello!
 Sends your message to everyone. Currently there are no channels and all clients receive every message sent
 
 # How to connect
-## Use `netcat` as a client`
+## Use `netcat` as a client
 Just run the server and connect by doing `netcat <server ip> 1234`
 
 # How to run the server
