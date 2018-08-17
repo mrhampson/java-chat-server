@@ -85,14 +85,12 @@ public class ServerMain {
             String line = inputBufferReader.readLine();
             if (line != null) {
               logger.log(line);
+              if (line.startsWith("BYE")) {
+                break;
+              }
               // TODO inserting test command processor here
               commandProcessorManager.processLine(username, line);
-              
-              if (line.startsWith("s ") || line.startsWith("SEND ")) {
-                String message = line.substring(line.indexOf(' ') + 1);
-                socketMessageDispatcher.dispatchMessageToAll(username, message);
-              }
-              else if (line.startsWith("NICK ")) {
+              if (line.startsWith("NICK ")) {
                 String proposedUsername = line.substring(line.indexOf(' ') + 1);
                 if (usernameManager.swapName(clientSocket.getInetAddress(), username, proposedUsername)) {
                   String formerName = username;
@@ -102,9 +100,6 @@ public class ServerMain {
                 else {
                   socketMessageDispatcher.dispatchMessageToAll(username, "Username: " + proposedUsername + " taken by another user!");
                 }
-              }
-              else if (line.startsWith("BYE")) {
-                break;
               }
             }
           }
