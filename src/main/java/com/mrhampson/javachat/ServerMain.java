@@ -85,8 +85,9 @@ public class ServerMain {
               else if (line.startsWith("NICK ")) {
                 String proposedUsername = line.substring(line.indexOf(' ') + 1);
                 if (usernameManager.swapName(username, proposedUsername)) {
+                  String formerName = username;
                   username = proposedUsername;
-                  socketMessageDispatcher.dispatchMessage(username, username + " joined");
+                  socketMessageDispatcher.dispatchMessage(username, formerName + "is now known as " + username);
                 }
                 else {
                   socketMessageDispatcher.dispatchMessage(username, "Username: " + proposedUsername + " taken by another user!");
