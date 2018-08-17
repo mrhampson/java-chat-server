@@ -1,7 +1,6 @@
 package com.mrhampson.javachat;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
@@ -22,15 +21,18 @@ public class ServerMain {
     LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE) + ".log";
   
   public static void main (String[] args) {
-    OutboundSocketMessageDispatcher socketMessageDispatcher = new OutboundSocketMessageDispatcher();
+    final OutboundSocketMessageDispatcher socketMessageDispatcher = new OutboundSocketMessageDispatcher();
+    final UsernameManager usernameManager = new UsernameManager();
+    
     try (
-      ServerSocket serverSocket = new ServerSocket(DEFAULT_PORT);
-      SimpleLogger logger = new SimpleLogger(LOG_FILE_PATH)
+      final ServerSocket serverSocket = new ServerSocket(DEFAULT_PORT);
+      final SimpleLogger logger = new SimpleLogger(LOG_FILE_PATH)
     ) {
       while (true) {
         Socket clientSocket = serverSocket.accept();
         socketMessageDispatcher.registerSocket(clientSocket);
-        ClientHandlerThread clientHandlerThread = new ClientHandlerThread(clientSocket, socketMessageDispatcher, logger);
+        ClientHandlerThread clientHandlerThread = new ClientHandlerThread(clientSocket, socketMessageDispatcher, logger,
+          usernameManager);
         clientHandlerThread.start();
       }
     }
@@ -45,19 +47,23 @@ public class ServerMain {
     private final Socket clientSocket;
     private final OutboundSocketMessageDispatcher socketMessageDispatcher;
     private final SimpleLogger logger;
+    private final UsernameManager usernameManager;
     private String username;
     
     private ClientHandlerThread(
       Socket clientSocket,
       OutboundSocketMessageDispatcher socketMessageDispatcher,
-      SimpleLogger sharedLogger) {
+      SimpleLogger sharedLogger,
+      UsernameManager usernameManager) {
       Objects.requireNonNull(clientSocket);
       Objects.requireNonNull(socketMessageDispatcher);
       Objects.requireNonNull(sharedLogger);
+      Objects.requireNonNull(usernameManager);
       this.clientSocket = clientSocket;
       this.socketMessageDispatcher = socketMessageDispatcher;
       this.username = this.clientSocket.getInetAddress().toString();
       this.logger = sharedLogger;
+      this.usernameManager = usernameManager;
     }
     
     @Override public void run() {
@@ -77,8 +83,14 @@ public class ServerMain {
                 socketMessageDispatcher.dispatchMessage(username, message);
               }
               else if (line.startsWith("NICK ")) {
-                username = line.substring(line.indexOf(' ') + 1);
-                socketMessageDispatcher.dispatchMessage(username, username + " joined");
+                String proposedUsername = line.substring(line.indexOf(' ') + 1);
+                if (usernameManager.swapName(username, proposedUsername)) {
+                  username = proposedUsername;
+                  socketMessageDispatcher.dispatchMessage(username, username + " joined");
+                }
+                else {
+                  socketMessageDispatcher.dispatchMessage(username, "Username: " + proposedUsername + " taken by another user!");
+                }
               }
               else if (line.startsWith("BYE")) {
                 break;
