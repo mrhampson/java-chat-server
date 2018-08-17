@@ -13,9 +13,10 @@
  */
 package com.mrhampson.javachat;
 
-import java.util.HashSet;
+import java.net.InetAddress;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  * Class manages the usernames and makes sure no one takes the same name
@@ -23,7 +24,7 @@ import java.util.Set;
  */
 public class UsernameManager {
   private final Object allActiveUsersLock = new Object();
-  private final Set<String> allActiveUsers = new HashSet<>();
+  private final Map<String, InetAddress> allActiveUsers = new HashMap<>();
 
   /**
    * Attempts to swap the username for a new one
@@ -31,18 +32,21 @@ public class UsernameManager {
    * @param newName the new desired name of this user
    * @return true if this username was successfully claimed, false otherwise
    */
-  public boolean swapName(String existingName, String newName) {
+  public boolean swapName(InetAddress userAddress, String existingName, String newName) {
     Objects.requireNonNull(existingName);
     Objects.requireNonNull(newName);
     synchronized (allActiveUsersLock) {
-      if (allActiveUsers.contains(newName)) {
+      if (allActiveUsers.keySet().contains(newName)) {
         return false;
       }
-      else {
-        allActiveUsers.remove(existingName);
-        allActiveUsers.add(newName);
-        return true;
-      }
+      allActiveUsers.put(newName, userAddress);
+    }
+    return true;
+  }
+  
+  public InetAddress getAddressForUser(String username) {
+    synchronized (allActiveUsersLock) {
+      return allActiveUsers.get(username);
     }
   }
 }

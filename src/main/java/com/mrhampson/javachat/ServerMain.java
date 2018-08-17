@@ -3,12 +3,14 @@ package com.mrhampson.javachat;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -80,17 +82,26 @@ public class ServerMain {
               logger.log(line);
               if (line.startsWith("s ") || line.startsWith("SEND ")) {
                 String message = line.substring(line.indexOf(' ') + 1);
-                socketMessageDispatcher.dispatchMessage(username, message);
+                socketMessageDispatcher.dispatchMessageToAll(username, message);
               }
               else if (line.startsWith("NICK ")) {
                 String proposedUsername = line.substring(line.indexOf(' ') + 1);
-                if (usernameManager.swapName(username, proposedUsername)) {
+                if (usernameManager.swapName(clientSocket.getInetAddress(), username, proposedUsername)) {
                   String formerName = username;
                   username = proposedUsername;
-                  socketMessageDispatcher.dispatchMessage(username, formerName + "is now known as " + username);
+                  socketMessageDispatcher.dispatchMessageToAll(username, formerName + " is now known as " + username);
                 }
                 else {
-                  socketMessageDispatcher.dispatchMessage(username, "Username: " + proposedUsername + " taken by another user!");
+                  socketMessageDispatcher.dispatchMessageToAll(username, "Username: " + proposedUsername + " taken by another user!");
+                }
+              }
+              else if (line.startsWith("DM ")) {
+                String[] words = line.split("\\s+");
+                String destUsername = words[1];
+                String message = "DM: " + String.join(" ", Arrays.copyOfRange(words, 2, words.length));
+                InetAddress destAddress = usernameManager.getAddressForUser(destUsername);
+                if (destAddress != null) {
+                  socketMessageDispatcher.dispatchMessageToAddress(destAddress, username, message);
                 }
               }
               else if (line.startsWith("BYE")) {

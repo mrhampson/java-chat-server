@@ -5,14 +5,11 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -25,32 +22,47 @@ public class OutboundSocketMessageDispatcher {
   private static final char ALARM_CHAR = (char)7;
   private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM);
   
-  private final Set<Socket> sockets = Collections.newSetFromMap(new ConcurrentHashMap<>());
+  private final Map<InetAddress, Socket> addressToSocketMap = new ConcurrentHashMap<>();
   private final Executor outboundMessageExecutor = Executors.newSingleThreadExecutor();
   
   public void registerSocket(Socket socket) {
-    sockets.add(socket);
+    Objects.requireNonNull(socket);
+    addressToSocketMap.put(socket.getInetAddress(), socket);
   }
   
   public void removeSocket(Socket socket) {
-    sockets.remove(socket);
+    Objects.requireNonNull(socket);
+    addressToSocketMap.remove(socket.getInetAddress());
   }
   
-  public void dispatchMessage(String username, String message) {
-    Objects.requireNonNull(username);
+  public void dispatchMessageToAddress(InetAddress destAddress, String sendingUsername, String message){
+    String formattedMessage = formatMessage(sendingUsername, message);
+    Socket destSocket = addressToSocketMap.get(destAddress);
+    writeMessageOnSocket(destSocket, formattedMessage);
+  }
+  
+  public void dispatchMessageToAll(String sendingUsername, String message) {
+    Objects.requireNonNull(sendingUsername);
     Objects.requireNonNull(message);
-    outboundMessageExecutor.execute(() -> dispatchMessageInternal(username, message));
+    outboundMessageExecutor.execute(() -> dispatchMessageInternal(sendingUsername, message));
   }
 
   private void dispatchMessageInternal(String username, String message) {
-    String fullMessage = ALARM_CHAR + DATE_TIME_FORMATTER.format(LocalDateTime.now()) + 
-      " (" + username + "): " + message + "\n";
-    for (Socket socket : sockets) {
-      try {
-        OutputStream outputStream = socket.getOutputStream();
-        outputStream.write(fullMessage.getBytes(StandardCharsets.US_ASCII));
-      }
-      catch (IOException ignored)  {}
+    String fullMessage = formatMessage(username, message);
+    for (Socket socket : addressToSocketMap.values()) {
+      writeMessageOnSocket(socket, fullMessage);
     }
+  }
+  
+  private String formatMessage(String username, String message) {
+    return ALARM_CHAR + DATE_TIME_FORMATTER.format(LocalDateTime.now()) + " (" + username + "): " + message + "\n";
+  }
+  
+  private void writeMessageOnSocket(Socket socket, String message) {
+    try {
+      OutputStream outputStream = socket.getOutputStream();
+      outputStream.write(message.getBytes(StandardCharsets.US_ASCII));
+    }
+    catch (IOException ignored)  {}
   }
 }
