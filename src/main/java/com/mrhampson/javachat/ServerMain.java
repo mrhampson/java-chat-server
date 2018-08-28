@@ -88,8 +88,8 @@ public class ServerMain {
               if (line.startsWith("BYE")) {
                 break;
               }
-              // TODO inserting test command processor here
               commandProcessorManager.processLine(username, line);
+              // TODO refactor nick command into command processor manager
               if (line.startsWith("NICK ")) {
                 String proposedUsername = line.substring(line.indexOf(' ') + 1);
                 if (usernameManager.swapName(clientSocket.getInetAddress(), username, proposedUsername)) {
@@ -100,6 +100,9 @@ public class ServerMain {
                 else {
                   socketMessageDispatcher.dispatchMessageToAll(username, "Username: " + proposedUsername + " taken by another user!");
                 }
+              }
+              else {
+                socketMessageDispatcher.dispatchMessageToAll(username, line);
               }
             }
           }

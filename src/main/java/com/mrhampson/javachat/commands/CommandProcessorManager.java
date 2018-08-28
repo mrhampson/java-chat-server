@@ -51,12 +51,8 @@ public class CommandProcessorManager {
       outboundSocketMessageDispatcher,
       usernameManager
     );
-    SendMessageCommandProcessor sendMessageCommandProcessor = new SendMessageCommandProcessor(
-      outboundSocketMessageDispatcher
-    );
     List<CommandProcessor> allProcessorsList = Arrays.asList(
-      directMessageCommandProcessor,
-      sendMessageCommandProcessor
+      directMessageCommandProcessor
     );
     Map<String, CommandProcessor> allProcessorMutable = new HashMap<>();
     for (CommandProcessor processor : allProcessorsList) {
