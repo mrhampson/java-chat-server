@@ -12,15 +12,15 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
-import java.util.logging.Logger;
 
 /**
  * @author Marshall Hampson
  */
 public class ServerMain {
+  private static final boolean LOG_CHATS = false;
   private static final int DEFAULT_PORT = 1234;
-  private static final String LOG_FILE_PATH = "chat-" + 
-    LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE) + ".log";
+  private static final String LOG_FILE_PATH = "chat-" + LocalDateTime.now().format(DateTimeFormatter.BASIC_ISO_DATE) 
+    + ".log";
   
   public static void main (String[] args) {
     final OutboundSocketMessageDispatcher socketMessageDispatcher = new OutboundSocketMessageDispatcher();
@@ -40,8 +40,7 @@ public class ServerMain {
         clientHandlerThread.start();
       }
     }
-    catch (IOException e) {
-      Logger.getGlobal().warning(e.toString());
+    catch (IOException ignored) {
     }
   }
   
@@ -84,7 +83,9 @@ public class ServerMain {
           try {
             String line = inputBufferReader.readLine();
             if (line != null) {
-              logger.log(line);
+              if (LOG_CHATS) {
+                logger.log(line);
+              }
               if (line.startsWith("BYE")) {
                 break;
               }

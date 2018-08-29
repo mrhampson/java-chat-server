@@ -13,6 +13,8 @@
  */
 package com.mrhampson.javachat;
 
+import net.jcip.annotations.ThreadSafe;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -25,6 +27,7 @@ import java.util.concurrent.Executors;
 /**
  * @author Marshall Hampson
  */
+@ThreadSafe
 public class SimpleLogger implements AutoCloseable {
   private static final int DEFAULT_BUFFER_SIZE = 128;
   private final BufferedWriter bufferedWriter;
